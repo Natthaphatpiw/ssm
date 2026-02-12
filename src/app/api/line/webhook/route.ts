@@ -4,16 +4,20 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
+type LineTextMessage = {
+  id: string;
+  type: "text";
+  text: string;
+};
+
+type LineImageMessage = {
+  id: string;
+  type: "image";
+};
+
 type LineMessage =
-  | {
-      id: string;
-      type: "text";
-      text: string;
-    }
-  | {
-      id: string;
-      type: "image";
-    }
+  | LineTextMessage
+  | LineImageMessage
   | {
       id: string;
       type: string;
@@ -28,6 +32,18 @@ type LineEvent = {
 type LineWebhookBody = {
   events?: LineEvent[];
 };
+
+function isLineTextMessage(message: LineMessage): message is LineTextMessage {
+  return (
+    message.type === "text" &&
+    "text" in message &&
+    typeof (message as { text?: unknown }).text === "string"
+  );
+}
+
+function isLineImageMessage(message: LineMessage): message is LineImageMessage {
+  return message.type === "image";
+}
 
 type ScamAnalysis = {
   category: "image" | "text" | "other";
@@ -137,7 +153,10 @@ async function analyzeWithOpenAI(input: {
   text?: string;
   imageDataUrl?: string;
 }): Promise<ScamAnalysis | null> {
-  const parts: Array<{ type: "input_text"; text: string } | { type: "input_image"; image_url: string }> = [];
+  const parts: Array<
+    | { type: "input_text"; text: string }
+    | { type: "input_image"; image_url: string; detail: "auto" }
+  > = [];
 
   if (input.text) {
     parts.push({
@@ -149,6 +168,7 @@ async function analyzeWithOpenAI(input: {
     parts.push({
       type: "input_image",
       image_url: input.imageDataUrl,
+      detail: "auto",
     });
   }
 
@@ -247,9 +267,9 @@ export async function POST(request: NextRequest) {
 
         let analysis: ScamAnalysis | null = null;
 
-        if (event.message.type === "text") {
+        if (isLineTextMessage(event.message)) {
           analysis = await analyzeWithOpenAI({ text: event.message.text });
-        } else if (event.message.type === "image") {
+        } else if (isLineImageMessage(event.message)) {
           const imageDataUrl = await fetchLineImage(event.message.id);
           analysis = await analyzeWithOpenAI({ imageDataUrl });
         } else {
