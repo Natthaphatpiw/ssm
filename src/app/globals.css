@@ -1,13 +1,16 @@
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --bg: #0a1016;
+  --bg-2: #101825;
+  --panel: #141f2c;
+  --panel-soft: rgba(20, 31, 44, 0.7);
+  --text: #eef2f7;
+  --muted: #9db0c4;
+  --accent: #00d0ff;
+  --accent-2: #ffb454;
+  --border: rgba(255, 255, 255, 0.08);
+  --success: #5ed4a8;
+  --danger: #ff6b6b;
+  --shadow: rgba(2, 12, 23, 0.55);
 }
 
 html,
@@ -17,9 +20,10 @@ body {
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  color: var(--text);
+  background: var(--bg);
+  font-family: var(--font-body), "IBM Plex Sans Thai", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -33,10 +37,4 @@ body {
 a {
   color: inherit;
   text-decoration: none;
-}
-
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
 }
