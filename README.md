@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ScamShield Alliance (Next.js + LINE OA)
 
-## Getting Started
+LINE OA backend สำหรับตรวจสอบข้อความและรูปภาพที่น่าสงสัยด้วย GPT-4.1-mini พร้อมหน้าเว็บแนะนำบริการ.
 
-First, run the development server:
+## Quick Start
+
+1. ติดตั้ง dependencies
+
+```bash
+npm install
+```
+
+2. ตั้งค่าไฟล์ `.env`
+
+```
+OPENAI_API_KEY=your_openai_api_key
+LINE_CHANNEL_SECRET=your_line_channel_secret
+LINE_CHANNEL_ACCESS_TOKEN=your_line_channel_access_token
+```
+
+3. รันเซิร์ฟเวอร์
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## LINE Webhook
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+ตั้งค่า Webhook URL ไปที่:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+https://<your-domain>/api/line/webhook
+```
 
-## Learn More
+ระบบจะตรวจลายเซ็นของ LINE, วิเคราะห์ข้อความ/รูปภาพด้วย GPT-4.1-mini และตอบกลับเฉพาะกรณีที่เกี่ยวข้องกับ scammers.
 
-To learn more about Next.js, take a look at the following resources:
+## โครงสร้างหลัก
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- หน้าเว็บ: `src/app/page.tsx`
+- Webhook: `src/app/api/line/webhook/route.ts`
+- CSS: `src/app/page.module.css`, `src/app/globals.css`
+# ssm
