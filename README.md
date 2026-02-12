@@ -16,6 +16,7 @@ npm install
 OPENAI_API_KEY=your_openai_api_key
 LINE_CHANNEL_SECRET=your_line_channel_secret
 LINE_CHANNEL_ACCESS_TOKEN=your_line_channel_access_token
+LINE_LOADING_SECONDS=20
 ```
 
 3. รันเซิร์ฟเวอร์
@@ -33,6 +34,10 @@ https://<your-domain>/api/line/webhook
 ```
 
 ระบบจะตรวจลายเซ็นของ LINE, วิเคราะห์ข้อความ/รูปภาพด้วย GPT-4.1-mini และตอบกลับเฉพาะกรณีที่เกี่ยวข้องกับ scammers.
+
+## Loading Animation
+
+Webhook จะเรียก LINE Loading Animation API ให้ในแชทแบบ one-on-one โดยอัตโนมัติ หากกำหนด `LINE_LOADING_SECONDS` จะควบคุมเวลาการแสดงผลได้ (5-60 วินาที, ขั้นละ 5 วินาที).
 
 ## โครงสร้างหลัก
 

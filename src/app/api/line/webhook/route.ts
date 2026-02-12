@@ -23,10 +23,18 @@ type LineMessage =
       type: string;
     };
 
+type LineEventSource = {
+  type?: "user" | "group" | "room" | string;
+  userId?: string;
+  groupId?: string;
+  roomId?: string;
+};
+
 type LineEvent = {
   type: string;
   replyToken?: string;
   message?: LineMessage;
+  source?: LineEventSource;
 };
 
 type LineWebhookBody = {
@@ -60,6 +68,7 @@ const openai = new OpenAI({
 
 const LINE_REPLY_ENDPOINT = "https://api.line.me/v2/bot/message/reply";
 const LINE_CONTENT_ENDPOINT = "https://api-data.line.me/v2/bot/message";
+const LINE_LOADING_ENDPOINT = "https://api.line.me/v2/bot/chat/loading/start";
 
 const SYSTEM_PROMPT = `
 You are ScamShield Alliance, a Thai-language scam safety analyst for LINE OA.
@@ -117,6 +126,42 @@ function verifySignature(body: string, signature: string | null): boolean {
     return false;
   }
   return crypto.timingSafeEqual(hashBuffer, signatureBuffer);
+}
+
+function getLoadingSeconds(): number | undefined {
+  const raw = process.env.LINE_LOADING_SECONDS;
+  if (!raw) {
+    return undefined;
+  }
+  const value = Number(raw);
+  if (!Number.isFinite(value)) {
+    return undefined;
+  }
+  const rounded = Math.round(value / 5) * 5;
+  return Math.min(60, Math.max(5, rounded));
+}
+
+async function startLineLoading(chatId: string): Promise<void> {
+  const token = getEnv("LINE_CHANNEL_ACCESS_TOKEN");
+  const loadingSeconds = getLoadingSeconds();
+  const payload: { chatId: string; loadingSeconds?: number } = { chatId };
+  if (loadingSeconds) {
+    payload.loadingSeconds = loadingSeconds;
+  }
+
+  const response = await fetch(LINE_LOADING_ENDPOINT, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`LINE loading failed: ${response.status} ${text}`);
+  }
 }
 
 async function fetchLineImage(messageId: string): Promise<string> {
@@ -268,8 +313,26 @@ export async function POST(request: NextRequest) {
         let analysis: ScamAnalysis | null = null;
 
         if (isLineTextMessage(event.message)) {
+          const userId =
+            event.source?.type === "user" ? event.source.userId : undefined;
+          if (userId) {
+            try {
+              await startLineLoading(userId);
+            } catch (error) {
+              console.error("LINE loading error:", error);
+            }
+          }
           analysis = await analyzeWithOpenAI({ text: event.message.text });
         } else if (isLineImageMessage(event.message)) {
+          const userId =
+            event.source?.type === "user" ? event.source.userId : undefined;
+          if (userId) {
+            try {
+              await startLineLoading(userId);
+            } catch (error) {
+              console.error("LINE loading error:", error);
+            }
+          }
           const imageDataUrl = await fetchLineImage(event.message.id);
           analysis = await analyzeWithOpenAI({ imageDataUrl });
         } else {
